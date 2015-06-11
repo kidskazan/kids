@@ -103,6 +103,45 @@
 				
 			setScenario($id_scenario, $hash, $token);
 			break;
+		case "endLesson":
+			if (isset($_REQUEST["id"]))
+				$id = htmlspecialchars($_REQUEST["id"]);
+			else
+				$id = "";
+				
+			endLesson($id);
+			break;
+		case "exitKidsStation":
+			if (isset($_REQUEST["token"]))
+				$token = htmlspecialchars($_REQUEST["token"]);
+			else
+				$token = "";
+				
+			if (isset($_REQUEST["hash"]))
+				$hash = htmlspecialchars($_REQUEST["hash"]);
+			else
+				$hash = "";
+				
+			exitKidsStation($hash, $token);
+			break;
+		case "extСhildrenStationNoMoney":
+			if (isset($_REQUEST["token"]))
+				$token = htmlspecialchars($_REQUEST["token"]);
+			else
+				$token = "";
+				
+			if (isset($_REQUEST["id"]))
+				$id = htmlspecialchars($_REQUEST["id"]);
+			else
+				$id = "";
+				
+			if (isset($_REQUEST["hash"]))
+				$hash = htmlspecialchars($_REQUEST["hash"]);
+			else
+				$hash = "";
+				
+			extСhildrenStationNoMoney($id, $hash, $token);
+			break;
 		default:
 			break;
 	}

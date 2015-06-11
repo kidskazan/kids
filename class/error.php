@@ -14,5 +14,6 @@
 		301 => "no qr code", //отсутствует qr code
 		302 => "a child with this qr code does not exist", //ребенка с данным qr кодом не существует
 		303 => "insufficient funds", //недостаточно средств у ребенка для входа на станцию
+		304 => "no child(id)", //данного ребенка не существует по id
 	);
 ?>

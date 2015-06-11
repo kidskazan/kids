@@ -485,6 +485,21 @@
 		return $result[0];
 	}
 	
+	//получить ребенка по id
+	function getChild($id)
+	{
+		$kids = new dataTable("kids");
+		$where = "";
+		$where = where($where, "id", "=", $id);
+		
+		$result = $kids->getFields(array("*"), $where);
+		
+		if (count($result) == 0)
+			$result[0] = null;
+			
+		return $result[0];
+	}
+	
 	//закончить занятие
 	//Входные параметры:
 	//	$id - занятия
@@ -573,6 +588,70 @@
 				$where = where($where, "id", "=", $val["id"]);
 				$kids->update($upd, $where);
 			}
+		}
+		
+		echo json_encode($r);
+	}
+	
+	//выход ребенка из станции без начисления опытов 
+	//Входные параметры:
+	//  $id - id ребенка
+	//	$hash - хеш станции
+	//  $token - token станции
+	//Возвращает статус
+	//Ошибки: 
+	function extСhildrenStationNoMoney($id, $hash, $token)
+	{
+		if ($hash == "")
+		{
+			$r = setError(103);
+			
+			echo json_encode($r);
+			exit;
+		}
+		
+		if ($token == "")
+		{
+			$r = setError(206);
+			
+			echo json_encode($r);
+			exit;
+		}
+		
+		if ($id == "")
+		{
+			$r = setError(304);
+			
+			echo json_encode($r);
+			exit;
+		}
+		
+		$child = getChild($id);
+		
+		if (($child) and ($child["id_station"] != 0))
+		{
+			$r["status"] = "ok";
+			
+			$kids = new dataTable("kids");
+			$where = "";
+			$where = where($where, "id", "=", $id);
+			$upd["id_station"] = 0;
+			$kids->update($upd, $where);
+			
+			$upd = "";
+			$upd["id_kid"] = $id;
+			
+			$stat = getStationByHash($hash);
+			$upd["id_station"] = $stat["id"];
+			
+			$mentor = getMentorByToken($token);
+			$upd["id_mentor"] = $mentor["id"];
+			
+			$upd["action"] = 3;
+			$upd["date"] = time();
+			
+			$sess_kids = new dataTable("sess_kids");
+			$sess_kids->add($upd);
 		}
 		
 		echo json_encode($r);
