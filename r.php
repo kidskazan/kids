@@ -656,4 +656,118 @@
 		
 		echo json_encode($r);
 	}
+	
+	//авторизация старшего наставника
+	//Входные параметры:
+	//	$login - логин наставника
+	//	$password - пароль наставника
+	//	$hash - hash станции
+	//Возвращает token
+	//Ошибки: 201, 202, 203, 204, 103, 101
+	
+	function stationAuthSeniorMentor($login, $password)
+	{
+		$mentor = new dataTable("senior_mentor");
+		
+		$where = "";
+		$where = where($where, "login", "=", $login);
+		$where = where($where, "AND");
+		$where = where($where, "password", "=", md5($password));
+		
+		$r_mentor = $mentor->getFields(array("*"), $where);
+		
+		$where = "";
+	
+		if (count($r_mentor) == 0)
+			$r = setError(201);
+		elseif ($r_mentor[0]["token"] != "")
+			$r = setError(202);
+		elseif($login == "")
+			$r = setError(203);
+		elseif($password == "")
+			$r = setError(204);
+		else
+		{
+			$r["status"] = "ok";
+			
+			$token = md5($r_mentor[0]["id"] + time());
+			$r["token"] = $token;
+			
+			$upd = "";
+			$upd["token"] = $token;
+			$where = "";
+			$where = where($where, "id", "=", $r_mentor[0]["id"]);
+			$mentor->update($upd, $where);
+		}
+		
+		echo json_encode($r);
+	}
+	
+	//выход старшего наставника из станции
+	//Входные параметры:
+	//	$token - token наставника
+	//Возвращает status
+	//Ошибки: 205, 206
+	function logoutSeniorMentor($token)
+	{
+		if ($token == "")
+		{
+			$r = setError(206);
+			
+			echo json_encode($r);
+			exit;
+		}
+		
+		$mentor = new dataTable("senior_mentor");
+		$where = "";
+		$where = where($where, "token", "=", $token);
+		$r_mentor = $mentor->getFields(array("*"), $where);
+		
+		if (count($r_mentor) == 0)
+			$r = setError(205);
+		else
+		{
+			$r["status"] = "ok";
+			$id_mentor = $r_mentor[0]["id"];
+			
+			$upd["token"] = "";
+			$where = "";
+			$where = where($where, "id", "=", $id_mentor);
+			$mentor->update($upd, $where);
+		}
+		
+		echo json_encode($r);
+	}
+	
+	
+	//Получить список всех станций старшим наставником.
+	//Возвращает - *
+	function getStationList($token)
+	{
+		if ($token == "")
+		{
+			$r = setError(206);
+			
+			echo json_encode($r);
+			exit;
+		}
+		
+		$mentor = new dataTable("senior_mentor");
+		$where = "";
+		$where = where($where, "token", "=", $token);
+		$r_mentor = $mentor->getFields(array("*"), $where);
+		
+		if (count($r_mentor) == 0)
+			$r = setError(205);
+		else
+		{
+			$stat = new dataTable("stations");
+		
+			$stations = $stat->getFields(array("*"));
+			$result["status"] = "ok";
+			$result["result"] = $stations;
+		}
+		
+		echo json_encode($result);
+	}
 ?>
