@@ -742,7 +742,7 @@
 	
 	//Получить список всех станций старшим наставником.
 	//Возвращает - *
-	function getStationList($token)
+	function getSeniorMentorStationList($token)
 	{
 		if ($token == "")
 		{

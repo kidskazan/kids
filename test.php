@@ -142,6 +142,34 @@
 				
 			extСhildrenStationNoMoney($id, $hash, $token);
 			break;
+		case "stationAuthSeniorMentor":
+			if (isset($_REQUEST["login"]))
+				$login = htmlspecialchars($_REQUEST["login"]);
+			else
+				$login = "";
+			
+			if (isset($_REQUEST["password"]))
+				$password = htmlspecialchars($_REQUEST["password"]);
+			else
+				$password = "";
+				
+			stationAuthSeniorMentor($login, $password);
+			break;
+		case "logoutSeniorMentor":
+			if (isset($_REQUEST["token"]))
+				$token = htmlspecialchars($_REQUEST["token"]);
+			else
+				$token = "";
+			
+			logoutSeniorMentor($token);
+			break;
+		case "getSeniorMentorStationList":
+			if (isset($_REQUEST["token"]))
+				$token = htmlspecialchars($_REQUEST["token"]);
+			else
+				$token = "";
+				
+			getSeniorMentorStationList($token);
 		default:
 			break;
 	}
