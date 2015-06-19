@@ -50,6 +50,7 @@
 					<td><b>ФИО</b></td>
 					<td><b>QR</b></td>
 					<td><b>Статус</b></td>
+					<td><b>Сообщение</b></td>
 					<td><b>Действие</b></td>
 				</tr>
 				<?foreach ($r_mentor as $val):?>
@@ -58,6 +59,18 @@
 						<td><?echo $val["name"]." ".$val["surname"]." ".$val["father_name"];?></td>
 						<td><?echo $val["qr"];?></td>
 						<td><?if ($val["token"] != "")echo "Авторизован"; else echo "Неавторизован";?></td>
+						<td>
+							<?if ($val["reg_id"] != ""):?>
+								<form action="http://91.239.26.122/test.php">
+									<input type="hidden" name="cmd" value="send_notification">
+									<input type="hidden" name="regId" value="<?=$val["reg_id"];?>">
+									<textarea name="message"></textarea>
+									<input type="submit" value="Отправить">
+								</form>
+							<?else:?>
+								<b style="color: red;">Требуется авторизация!!!</b>
+							<?endif;?>
+						</td>
 						<td>
 							<?if ($val["token"] != ""):?>
 								<a href="http://91.239.26.122/test.php?cmd=logout&token=<?echo $val["token"];?>">Выйти</a>

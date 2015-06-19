@@ -1,6 +1,6 @@
 <?
 	require_once "class/dataTable.class.php";
-	
+	define("GOOGLE_API_KEY", "AIzaSyBQo5HKZCvUCxiOchPNq0s4VzyjXYvqvlw"); 
 	
 	//Получить список всех станций.
 	//Возвращает - name, id
@@ -90,7 +90,7 @@
 	//Возвращает token
 	//Ошибки: 201, 202, 203, 204, 103, 101
 	
-	function stationAuth($login, $password, $hash)
+	function stationAuth($login, $password, $hash, $reg_id)
 	{
 		global $error;
 		$mentor = new dataTable("mentor");
@@ -117,6 +117,8 @@
 			$r = setError(204);
 		elseif($hash == "")
 			$r = setError(103);
+		elseif($reg_id == "")
+			$r = setError(401);
 		elseif (count($stations) == 0)
 			$r = setError(101);
 		else
@@ -128,6 +130,7 @@
 			
 			$upd = "";
 			$upd["token"] = $token;
+			$upd["reg_id"] = $reg_id;
 			$where = "";
 			$where = where($where, "id", "=", $r_mentor[0]["id"]);
 			$mentor->update($upd, $where);
@@ -196,7 +199,7 @@
 	//	$token - token наставника
 	//	$hash - хеш станции 
 	//Возвращает status
-	//Ошибки: 206, 103, 301, 302, 205, 101, 303
+	//Ошибки: 206, 103, 301, 302, 205, 101, 303, 305
 	function enterKids($qr, $token, $hash)
 	{
 		global $error;
@@ -248,6 +251,8 @@
 			$r = setError(101);
 		elseif ($r_kids[0]["money"] < $r_stations[0]["price"])
 			$r = setError(303);
+		elseif ($r_kids[0]["id_station"] != "")
+			$r = setError(305);
 		else
 		{
 			$r["status"] = "ok";
@@ -364,7 +369,7 @@
 	//	$id_scenario - id сценария 
 	//	$token - token наставника
 	//Возвращает id занятия
-	//Ошибки: 
+	//Ошибки: 103, 206, 101, 205, 401
 	function setScenario($id_scenario, $hash, $token)
 	{
 		if ($hash == "")
@@ -530,7 +535,7 @@
 	//	$hash - хеш станции
 	//  $token - token станции
 	//Возвращает статус
-	//Ошибки: 
+	//Ошибки: 103, 206, 101
 	function exitKidsStation($hash, $token)
 	{
 		if ($hash == "")
@@ -599,7 +604,7 @@
 	//	$hash - хеш станции
 	//  $token - token станции
 	//Возвращает статус
-	//Ошибки: 
+	//Ошибки: 103, 206, 304
 	function extСhildrenStationNoMoney($id, $hash, $token)
 	{
 		if ($hash == "")
@@ -741,7 +746,10 @@
 	
 	
 	//Получить список всех станций старшим наставником.
+	//Входные параметры:
+	//$token - token наставника
 	//Возвращает - *
+	//Ошибки: 205, 206
 	function getSeniorMentorStationList($token)
 	{
 		if ($token == "")
@@ -770,4 +778,367 @@
 		
 		echo json_encode($result);
 	}
+	
+	
+	//отправка push уведомления
+	function send_notification($registatoin_ids, $message) 
+	{
+        
+        // Set POST variables
+        $url = 'https://android.googleapis.com/gcm/send';
+ 
+        $fields = array(
+            'registration_ids' => $registatoin_ids,
+            'data' => $message,
+        );
+ 
+        $headers = array(
+            'Authorization: key=' . GOOGLE_API_KEY,
+            'Content-Type: application/json'
+        );
+        // Open connection
+        $ch = curl_init();
+ 
+        // Set the url, number of POST vars, POST data
+        curl_setopt($ch, CURLOPT_URL, $url);
+ 
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+ 
+        // Disabling SSL Certificate support temporarly
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+ 
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+ 
+        // Execute post
+        $result = curl_exec($ch);
+        if ($result === FALSE) {
+            die('Curl failed: ' . curl_error($ch));
+        }
+ 
+        // Close connection
+        curl_close($ch);
+        echo $result;
+    }
+	
+	//вход ребенка в город
+	//Входные параметры:
+	//	$qr - qr код ребенка
+	//	$id_city - id города
+	//Возвращает status
+	//Ошибки: 301, 150
+	function enterKidsCity($id_city, $qr)
+	{	
+		if ($qr == "")
+		{
+			$r = setError(301);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		if ($id_city == "")
+		{
+			$r = setError(150);
+			
+			echo json_encode($r);
+			exit;
+		}
+		
+		$kids = new dataTable("kids");
+		$where = "";
+		$where = where($where, "qr", "=", $qr);
+		$r_kids = $kids->getFields(array("*"), $where);
+		
+		$city = new dataTable("city");
+		$where = "";
+		$where = where($where, "id", "=", $id_city);
+		$r_city = $city->getFields(array("*"), $where);
+		
+		
+		if (count($r_kids) == 0)
+			$r = setError(302);
+		elseif (count($r_city) == 0)
+			$r = setError(150);
+		else
+		{
+			$r["status"] = "ok";
+			
+			$upd = "";
+			$upd["id_city"] = $id_city;
+			
+			$where = "";
+			$where = where($where, "id", "=", $r_kids[0]["id"]);
+			$kids->update($upd, $where);
+			
+			$sess_city = new dataTable("sess_city");
+			
+			$upd = "";
+			$upd["id_kids"] = $r_kids[0]["id"];
+			$upd["id_city"] = $id_city;
+			$upd["input"] = time();
+			$sess_city->add($upd);
+		}
+		
+		echo json_encode($r);
+	}
+	
+	//выход ребенка из станции
+	//Входные параметры:
+	//	$qr - qr код ребенка
+	//Возвращает status
+	//Ошибки: 301, 302, 305, 306
+	
+	function exitKidsCity($qr)
+	{
+		if ($qr == "")
+		{
+			$r = setError(301);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		$kids = new dataTable("kids");
+		$where = "";
+		$where = where($where, "qr", "=", $qr);
+		$r_kids = $kids->getFields(array("*"), $where);
+		
+		if (count($r_kids) == 0)
+			$r = setError(302);
+		else
+		{
+			$sess_city = new dataTable("sess_city");
+			$where = "";
+			$where = where($where, "id_kids", "=", $r_kids[0]["id"]);
+			$where = where($where, "AND");
+			$where = where($where, "exit", "=", "");
+			$res = $sess_city->getFields(array("id"), $where);
+			
+			if (count($res) == 0)
+				$r = setError(305);
+			elseif (count($res) > 1)
+				$r = setError(306);
+			else
+			{
+				$r["status"] = "ok";
+				$upd = "";
+				$upd["exit"] = time();
+				$where = "";
+				$where = where($where, "id", "=", $res[0]["id"]);
+				$sess_city->update($upd, $where);
+				
+				$upd = "";
+				$upd["id_city"] = "";
+				
+				$where = "";
+				$where = where($where, "id", "=", $r_kids[0]["id"]);
+				$kids->update($upd, $where);
+			}
+		}
+		
+		echo json_encode($r);
+	}
+	
+	//валидация
+	function valid($val)
+	{
+		if (isset($val))
+			$r = htmlspecialchars($val);
+		else
+			$r = "";
+		
+		return $r;
+	}
+	
+	//получить всех детей в данном городе
+	//Входные параметры:
+	//	$id - id города
+	//Возвращает * массив из детей
+	//Ошибки: 150
+	function getKidsOnIDCity($id)
+	{
+		if ($id == "")
+		{
+			$r = setError(150);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		$kids = new dataTable("kids");
+		$where = "";
+		$where = where($where, "id_city", "=", $id);
+		$res = $kids->getFields(array("*"), $where);
+		
+		$r["status"] = "ok";
+		$r["result"] = $res;
+		
+		echo json_encode($r);
+	}
+	
+	//получить всех наставников в данном городе
+	//Входные параметры:
+	//	$id - id города
+	//Возвращает * массив из наставников
+	//Ошибки: 150
+	function getMentorOnIDCity($id)
+	{
+		if ($id == "")
+		{
+			$r = setError(150);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		$mentor = new dataTable("mentor");
+		$where = "";
+		$where = where($where, "id_city", "=", $id);
+		$res = $mentor->getFields(array("*"), $where);
+		
+		$r["status"] = "ok";
+		$r["result"] = $res;
+		
+		echo json_encode($r);
+	}
+	
+	//установить расписание для наставника
+	//Входные параметры:
+	//	$id_mentor - id наставника
+	//  $id_station - id станции
+	//  $date - дата
+	//  $change - смена
+	//Возвращает статус
+	//Ошибки: 207, 101, 402
+	function setTimetable($id_mentor, $id_station, $date, $change)
+	{
+		if ($id_mentor == "")
+		{
+			$r = setError(207);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		if ($id_station == "")
+		{
+			$r = setError(101);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		if ($date == "")
+		{
+			$r = setError(402);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		if ($change == "")
+		{
+			$r = setError(402);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		$timetable = new dataTable("timetable");
+		$upd["id_mentor"] = $id_mentor;
+		$upd["id_station"] = $id_station;
+		$upd["date"] = strtotime($date);
+		$upd["change"] = $change;
+		
+		$timetable->add($upd);
+		$r["status"] = "ok";
+		
+		echo json_encode($r);
+	}
+	
+	//получить по token расписание для города
+	//Входные параметры:
+	//	$token - token старшего наставника
+	//  $start - начальная цифра с которой нужно показывать
+	//  $offset - конечная цифра до которой нужно показывать
+	//Возвращает статус
+	//Ошибки: 205, 402
+	function getTimetable($token, $start, $offset)
+	{
+		if ($token == "") 
+		{
+			$r = setError(402);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		if ($start == "") 
+		{
+			$r = setError(402);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		if ($offset == "") 
+		{
+			$r = setError(402);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		$senior_mentor = new dataTable("senior_mentor");
+		$where = where($where, "token", "=", $token);
+		$res = $senior_mentor->getFields(array("*"), $where);
+		
+		if (count($res) == 0)
+			$r = setError(205);
+		else
+		{
+			$id_city = $res[0]["id_city"];
+			$stat = new dataTable("stations");
+			$where = "";
+			$where = where($where, "id_city", "=", $id_city);
+			$stations = $stat->getFields(array("id"), $where);
+			$r_stations = $stat->getFields(array("*"), $where);
+			foreach ($r_stations as $val)
+				$dt_station[$val["id"]] = $val;
+			
+			$mentor = new dataTable("mentor");
+			$where = "";
+			$where = where($where, "id_city", "=", $id_city);
+			$r_mentor = $mentor->getFields(array("*"), $where);
+			foreach ($r_mentor as $val)
+				$dt_mentor[$val["id"]] = $val;
+			
+			$timetable = new dataTable("timetable");
+			$limit[0] = $start;
+			$limit[1] = $offset;
+			$where = "";
+			$where = where($where, "id_station", "IN", $stations);
+			$r_timetable = $timetable->getFields(array("*"), $where, "", $limit);
+			
+			$i = 0;
+			foreach ($r_timetable as $val)
+			{
+				$result[$i]["date"] = $val["date"];
+				$result[$i]["change"] = $val["change"];
+				$result[$i]["mentor"] = $dt_mentor[$val["id_mentor"]];
+				$result[$i]["station"] = $dt_station[$val["id_station"]];
+				
+				$i++;
+			}
+			
+			$r["status"] = "ok";
+			$r["result"] = $result;
+		}
+		
+		echo json_encode($r);
+	}
+	
+	
 ?>

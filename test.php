@@ -12,164 +12,110 @@
 			getStationList();
 			break;
 		case "selectStation":
-			if (isset($_REQUEST["id"]))
-				$id = htmlspecialchars($_REQUEST["id"]);
-			else
-				$id = "";
+			$id = valid($_REQUEST["id"]);
 			selectStation($id);
 			break;
 		case "exitStation":
-			if (isset($_REQUEST["hash"]))
-				$hash = htmlspecialchars($_REQUEST["hash"]);
-			else
-				$hash = "";
+			$hash = valid($_REQUEST["hash"]);
 			exitStation($hash);
 			break;
 		case "stationAuth":
-			if (isset($_REQUEST["login"]))
-				$login = htmlspecialchars($_REQUEST["login"]);
-			else
-				$login = "";
-			
-			if (isset($_REQUEST["password"]))
-				$password = htmlspecialchars($_REQUEST["password"]);
-			else
-				$password = "";
-				
-			if (isset($_REQUEST["hash"]))
-				$hash = htmlspecialchars($_REQUEST["hash"]);
-			else
-				$hash = "";
-				
-			stationAuth($login, $password, $hash);
+			$login = valid($_REQUEST["login"]);
+			$password = valid($_REQUEST["password"]);
+			$hash = valid($_REQUEST["hash"]);
+			$reg_id = valid($_REQUEST["reg_id"]);
+			stationAuth($login, $password, $hash, $reg_id);
 			break;
 		case "logout":
-			if (isset($_REQUEST["token"]))
-				$token = htmlspecialchars($_REQUEST["token"]);
-			else
-				$token = "";
-				
+			$token = valid($_REQUEST["token"]);
 			logout($token);
 			break;
 		case "enterKids":
-			if (isset($_REQUEST["qr"]))
-				$qr = htmlspecialchars($_REQUEST["qr"]);
-			else
-				$qr = "";
-			
-			if (isset($_REQUEST["token"]))
-				$token = htmlspecialchars($_REQUEST["token"]);
-			else
-				$token = "";
-				
-			if (isset($_REQUEST["hash"]))
-				$hash = htmlspecialchars($_REQUEST["hash"]);
-			else
-				$hash = "";
-				
+			$qr = valid($_REQUEST["qr"]);
+			$token = valid($_REQUEST["token"]);
+			$hash = valid($_REQUEST["hash"]);
 			enterKids($qr, $token, $hash);
 			break;
 		case "getStationKidsList":
-			if (isset($_REQUEST["hash"]))
-				$hash = htmlspecialchars($_REQUEST["hash"]);
-			else
-				$hash = "";
-				
+			$hash = valid($_REQUEST["hash"]);
 			getStationKidsList($hash);
 			break;
 		case "getListScenario":
-			if (isset($_REQUEST["hash"]))
-				$hash = htmlspecialchars($_REQUEST["hash"]);
-			else
-				$hash = "";
-				
+			$hash = valid($_REQUEST["hash"]);
 			getListScenario($hash);
 			break;
 		case "setScenario":
-			if (isset($_REQUEST["id_scenario"]))
-				$id_scenario = htmlspecialchars($_REQUEST["id_scenario"]);
-			else
-				$id_scenario = "";
-			
-			if (isset($_REQUEST["token"]))
-				$token = htmlspecialchars($_REQUEST["token"]);
-			else
-				$token = "";
-				
-			if (isset($_REQUEST["hash"]))
-				$hash = htmlspecialchars($_REQUEST["hash"]);
-			else
-				$hash = "";
-				
+			$id_scenario = valid($_REQUEST["id_scenario"]);
+			$token = valid($_REQUEST["token"]);
+			$hash = valid($_REQUEST["hash"]);
 			setScenario($id_scenario, $hash, $token);
 			break;
 		case "endLesson":
-			if (isset($_REQUEST["id"]))
-				$id = htmlspecialchars($_REQUEST["id"]);
-			else
-				$id = "";
-				
+			$id = valid($_REQUEST["id"]);
 			endLesson($id);
 			break;
 		case "exitKidsStation":
-			if (isset($_REQUEST["token"]))
-				$token = htmlspecialchars($_REQUEST["token"]);
-			else
-				$token = "";
-				
-			if (isset($_REQUEST["hash"]))
-				$hash = htmlspecialchars($_REQUEST["hash"]);
-			else
-				$hash = "";
-				
+			$token = valid($_REQUEST["token"]);
+			$hash = valid($_REQUEST["hash"]);
 			exitKidsStation($hash, $token);
 			break;
 		case "extСhildrenStationNoMoney":
-			if (isset($_REQUEST["token"]))
-				$token = htmlspecialchars($_REQUEST["token"]);
-			else
-				$token = "";
-				
-			if (isset($_REQUEST["id"]))
-				$id = htmlspecialchars($_REQUEST["id"]);
-			else
-				$id = "";
-				
-			if (isset($_REQUEST["hash"]))
-				$hash = htmlspecialchars($_REQUEST["hash"]);
-			else
-				$hash = "";
-				
+			$token = valid($_REQUEST["token"]);
+			$id = valid($_REQUEST["id"]);
+			$hash = valid($_REQUEST["hash"]);				
 			extСhildrenStationNoMoney($id, $hash, $token);
 			break;
 		case "stationAuthSeniorMentor":
-			if (isset($_REQUEST["login"]))
-				$login = htmlspecialchars($_REQUEST["login"]);
-			else
-				$login = "";
-			
-			if (isset($_REQUEST["password"]))
-				$password = htmlspecialchars($_REQUEST["password"]);
-			else
-				$password = "";
-				
+			$login = valid($_REQUEST["login"]);
+			$password = valid($_REQUEST["password"]);
 			stationAuthSeniorMentor($login, $password);
 			break;
 		case "logoutSeniorMentor":
-			if (isset($_REQUEST["token"]))
-				$token = htmlspecialchars($_REQUEST["token"]);
-			else
-				$token = "";
-			
+			$token = valid($_REQUEST["token"]);
 			logoutSeniorMentor($token);
 			break;
 		case "getSeniorMentorStationList":
-			if (isset($_REQUEST["token"]))
-				$token = htmlspecialchars($_REQUEST["token"]);
-			else
-				$token = "";
-				
+			$token = valid($_REQUEST["token"]);
 			getSeniorMentorStationList($token);
+		case "send_notification":
+			if (isset($_REQUEST["regId"]) && isset($_REQUEST["message"])) {
+				$regId = $_REQUEST["regId"];
+				$message = $_REQUEST["message"];
+				$registatoin_ids = array($regId);
+				$message = array("price" => $message);
+				send_notification($registatoin_ids, $message);
+			}
+			break;
+		case "enterKidsCity":
+			$qr = valid($_REQUEST["qr"]);
+			$id_city = valid($_REQUEST["id_city"]);
+			enterKidsCity($id_city, $qr);
+			break;
+		case "exitKidsCity"
+			$qr = valid($_REQUEST["qr"]);
+			exitKidsCity($qr);
+			break;
+		case "getKidsOnIDCity":
+			$id = valid($_REQUEST["id"]);
+			getKidsOnIDCity($id);
+			break;
+		case "getMentorOnIDCity":
+			$id = valid($_REQUEST["id"]);
+			getMentorOnIDCity($id);
+			break;
+		case "setTimetable":
+			$id_mentor = valid($_REQUEST["id_mentor"]);
+			$id_station = valid($_REQUEST["id_station"]);
+			$date = valid($_REQUEST["date"]);
+			$change = valid($_REQUEST["change"]);
+			setTimetable($id_mentor, $id_station, $date, $change);
+			break;
+		case "getTimetable":
+			$token = valid($_REQUEST["token"]); 
+			$start = valid($_REQUEST["start"]);
+			$offset = valid($_REQUEST["offset"]);
+			getTimetable($token, $start, $offset);
+			break;
 		default:
 			break;
 	}
