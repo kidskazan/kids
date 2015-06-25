@@ -1,16 +1,46 @@
 <?
 	require_once "class/dataTable.class.php";
-	define("GOOGLE_API_KEY", "AIzaSyBQo5HKZCvUCxiOchPNq0s4VzyjXYvqvlw"); 
+	define("GOOGLE_API_KEY", "AIzaSyCDdQThRcpvp8KzFKF3ktFL32K_8cZAHT0"); 
 	
 	//Получить список всех станций.
 	//Возвращает - name, id
 	function getStationList()
 	{
 		$stat = new dataTable("stations");
+		$city = new dataTable("city");
+		$stations = $stat->getFields(array("id", "name", "id_city"));
+		$r_city = $city->getFields(array("*"));
 		
-		$stations = $stat->getFields(array("id", "name"));
+		foreach ($r_city as $val)
+		{
+			$r["id"] = $val["id"];
+			$r["name"] = $val["name"];
+			foreach ($stations as $v)
+			{
+				$r_s["id"] = $v["id"];
+				$r_s["name"] = $v["name"];
+				
+				$r["stations"][] = $r_s;
+			}
+			
+			$res[] = $r;
+		}
+		
 		$result["status"] = "ok";
-		$result["result"] = $stations;
+		$result["cities"] = $res;
+		echo json_encode($result);
+	}
+	
+	//Получить список всех городов.
+	//Возвращает - name, id
+	function getCities()
+	{
+		$city = new dataTable("city");
+		$r_city = $city->getFields(array("id", "name"));
+		
+		
+		$result["status"] = "ok";
+		$result["result"] = $r_city;
 		echo json_encode($result);
 	}
 	
@@ -148,6 +178,70 @@
 		echo json_encode($r);
 	}
 	
+	//авторизация таможенника
+	//Входные параметры:
+	//	$login - логин наставника
+	//	$password - пароль наставника
+	//	$id - id города
+	//Возвращает token
+	//Ошибки: 
+	
+	function customAuth($login, $password, $id)
+	{
+		$customs = new dataTable("customs");
+		
+		$where = "";
+		$where = where($where, "login", "=", $login);
+		$where = where($where, "AND");
+		$where = where($where, "password", "=", md5($password));
+		
+		$r_custom = $customs->getFields(array("*"), $where);
+		
+		$where = "";
+		$city = new dataTable("city");
+		$where = where($where, "id", "=", $id);
+		$r_city = $city->getFields(array("*"), $where);
+		
+		if (count($r_custom) == 0)
+			$r = setError(201);
+		elseif ($r_custom[0]["token"] != "")
+			$r = setError(208);
+		elseif($login == "")
+			$r = setError(203);
+		elseif($password == "")
+			$r = setError(204);
+		elseif($id == "")
+			$r = setError(209);
+		elseif (count($r_city) == 0)
+			$r = setError(150);
+		else
+		{
+			$r["status"] = "ok";
+			
+			$token = md5($r_custom[0]["id"] + time());
+			$r["token"] = $token;
+			
+			$upd = "";
+			$upd["token"] = $token;
+			$upd["id_city"] = $id;
+			$where = "";
+			$where = where($where, "id", "=", $r_custom[0]["id"]);
+			$custom->update($upd, $where);
+			
+			$upd = "";
+			$upd["id_city"] = $id;
+			$upd["id_custom"] = $r_custom[0]["id"];
+			$upd["input"] = time();
+			$upd["token"] = $token;
+			
+			$sess_custom = new dataTable("sess_custom");
+			$sess_custom->add($upd);
+		
+		}
+		
+		echo json_encode($r);
+	}
+	
 	//выход наставника из станции
 	//Входные параметры:
 	//	$token - token наставника
@@ -188,6 +282,49 @@
 			$where = "";
 			$where = where($where, "token", "=", $token);
 			$sess_station->update($upd, $where);
+		}
+		
+		echo json_encode($r);
+	}
+	
+	//выход таможенника из города
+	//Входные параметры:
+	//	$token - token таможенника
+	//Возвращает status
+	//Ошибки: 
+	function logoutCustom($token)
+	{	
+		if ($token == "")
+		{
+			$r = setError(206);
+			
+			echo json_encode($r);
+			exit;
+		}
+		
+		$custom = new dataTable("customs");
+		$where = "";
+		$where = where($where, "token", "=", $token);
+		$r_custom = $custom->getFields(array("*"), $where);
+		
+		if (count($r_custom) == 0)
+			$r = setError(205);
+		else
+		{
+			$r["status"] = "ok";
+			$id_custom = $r_custom[0]["id"];
+			
+			$upd["token"] = "";
+			$where = "";
+			$where = where($where, "id", "=", $id_custom);
+			$custom->update($upd, $where);
+			
+			$sess_custom = new dataTable("sess_customs");
+			$upd = "";
+			$upd["exit"] = time();
+			$where = "";
+			$where = where($where, "token", "=", $token);
+			$sess_custom->update($upd, $where);
 		}
 		
 		echo json_encode($r);

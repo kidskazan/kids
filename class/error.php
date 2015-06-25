@@ -13,6 +13,8 @@
 		205 => "no user(token)", //остутствует данный пользователь по token
 		206 => "missing or empty token", //остутствует или пустой token
 		207 => "id of the mentor does not exist or is empty", //данного id наставника не существует или пустой
+		208 => "the custom is already authorized", //данный таможенник уже авторизован
+		209 => "id of the custom does not exist or is empty", //данного id таможенника не существует или пустой
 		301 => "no qr code", //отсутствует qr code
 		302 => "a child with this qr code does not exist", //ребенка с данным qr кодом не существует
 		303 => "insufficient funds", //недостаточно средств у ребенка для входа на станцию

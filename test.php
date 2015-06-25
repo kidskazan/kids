@@ -26,6 +26,12 @@
 			$reg_id = valid($_REQUEST["reg_id"]);
 			stationAuth($login, $password, $hash, $reg_id);
 			break;
+		case "customAuth":
+			$login = valid($_REQUEST["login"]);
+			$password = valid($_REQUEST["password"]);
+			$id = valid($_REQUEST["id"]);
+			customAuth($login, $password, $id);
+			break;
 		case "logout":
 			$token = valid($_REQUEST["token"]);
 			logout($token);
@@ -91,7 +97,7 @@
 			$id_city = valid($_REQUEST["id_city"]);
 			enterKidsCity($id_city, $qr);
 			break;
-		case "exitKidsCity"
+		case "exitKidsCity":
 			$qr = valid($_REQUEST["qr"]);
 			exitKidsCity($qr);
 			break;
@@ -115,6 +121,9 @@
 			$start = valid($_REQUEST["start"]);
 			$offset = valid($_REQUEST["offset"]);
 			getTimetable($token, $start, $offset);
+			break;
+		case "getCities":
+			getCities();
 			break;
 		default:
 			break;
