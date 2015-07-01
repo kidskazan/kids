@@ -125,6 +125,16 @@
 		case "getCities":
 			getCities();
 			break;
+		case "sendMessage":
+			$id_type = valid($_REQUEST["id_type"]);
+			$token = valid($_REQUEST["token"]);
+			$msg = valid($_REQUEST["msg"]);
+			sendMessage($id_type, $token, $msg);
+			break;
+		case "getCityByToken":
+			$token = valid($token);
+			getCityByToken($token);
+			break;
 		default:
 			break;
 	}

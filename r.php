@@ -339,8 +339,6 @@
 	//Ошибки: 206, 103, 301, 302, 205, 101, 303, 305
 	function enterKids($qr, $token, $hash)
 	{
-		global $error;
-		
 		if ($token == "")
 		{
 			$r = setError(206);
@@ -388,7 +386,7 @@
 			$r = setError(101);
 		elseif ($r_kids[0]["money"] < $r_stations[0]["price"])
 			$r = setError(303);
-		elseif ($r_kids[0]["id_station"] != "")
+		elseif ($r_kids[0]["id_station"] != 0)
 			$r = setError(305);
 		else
 		{
@@ -1054,7 +1052,7 @@
 			$res = $sess_city->getFields(array("id"), $where);
 			
 			if (count($res) == 0)
-				$r = setError(305);
+				$r = setError(307);
 			elseif (count($res) > 1)
 				$r = setError(306);
 			else
@@ -1277,5 +1275,174 @@
 		echo json_encode($r);
 	}
 	
+	//получить текст сообщения по id
+	function getMsgText($id)
+	{
+		$msgText = new dataTable($id);
+		
+		$where = where($where, "id", "=", $id);
+		$txt = $msgText->getFields(array("text"), $where);
+		
+		return $txt[0]["text"];
+	}
+	
+	//отправка сообщения
+	function sendMessage($id_type, $token, $msg)
+	{
+		if ($token == "") 
+		{
+			$r = setError(205);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		if ($id_type == "") 
+		{
+			$r = setError(210);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		$typeUser = new dataTable("dir_typeUser");
+		$where = "";
+		$where = where($where, "id", "=", $id_type);
+		
+		$table = $typeUser->getFields(array("table"), $where);
+		
+		$table_name = $table[0]["table"];
+		
+		if ($table_name == "")
+			$r = setError(210);
+		else
+		{
+			$user_table = new dataTable($table_name);
+			
+			$where = "";
+			$where = where($where, "token", "=", $token);
+			
+			$r_user_table = $user_table->getFields(array("*"), $where);
+			
+			if (count($r_user_table) == 0)
+				$r = setError(205);
+			else
+			{
+				$r["status"] = "ok";
+				
+				$msgText = new dataTable("msg_text");
+				$upd = "";
+				$upd["text"] = $msg;
+				$id_msg = $msgText->add($upd);
+				
+				$id_city = $r_user_table[0]["id_city"];
+				
+				sendMsgTbl($r_user_table[0]["id"], $id_type, $id_msg, 1);
+				
+				$arr_recepient = getArrRecepientByIdCity($id_city);
+				
+				foreach ($arr_recepient as $val)
+				{
+					if (($r_user_table[0]["id"] != $val["id"]) and ($id_type != $val["type"]) and ($val["reg_id"] != ""))
+					{
+						sendMsgTbl($val["id"], $val["type"], $id_msg, 2);
+						send_notification($val["reg_id"], $msg);
+					}
+					
+				}
+			}
+		}
+		
+		echo json_encode($r);
+	}
+	
+	
+	
+	//отправить конкретному пользователю сообщение
+	function sendMsgTbl($id_user, $id_type, $id_msg, $id_action)
+	{
+		$msg = new dataTable("messages");
+		$upd["id_user"] = $id_user;
+		$upd["id_type"] = $id_type;
+		$upd["date"] = time();
+		$upd["id_msg"] = $id_msg;
+		$upd["id_action"] = $id_action;
+		
+		return $msg->add($upd);
+	}
+	
+	//получить список пользователей по id города
+	function getArrRecepientByIdCity($id_city)
+	{
+		$mentor = new dataTable("mentor");
+		$senior_mentor = new dataTable("senior_mentor");
+		$customs = new dataTable("customs");
+		
+		$where = where($where, "id", "=", $id_city);
+		$where = where($where, "AND");
+		$where = where($where, "token", "<>", "");
+		
+		$r_mentor = $mentor->getFields(array("id", "reg_id"));
+		$r_senior_mentor = $senior_mentor->getFields(array("id", "reg_id"));
+		$r_customs = $customs->getFields(array("id", "reg_id"));
+		
+		$i = 0;
+		foreach ($r_mentor as $val)
+		{
+			$res[$i] = $val;
+			$res[$i]["type"] = 2;
+			$i++;
+		}
+		
+		foreach ($r_senior_mentor as $val)
+		{
+			$res[$i] = $val;
+			$res[$i]["type"] = 4;
+			$i++;
+		}
+		
+		foreach ($r_customs as $val)
+		{
+			$res[$i] = $val;
+			$res[$i]["type"] = 1;
+			$i++;
+		}
+		
+		return $res;
+	}
+	
+	//получить по токен наставника город
+	function getCityByToken($token)
+	{
+		if ($token == "") 
+		{
+			$r = setError(205);
+			 
+			echo json_encode($r);
+			exit;
+		}
+		
+		$senior_mentor = new dataTable("senior_mentor");
+		$where = "";
+		$where = where($where, "token", "=", $token);
+		$dt = $senior_mentor->getFields(array("id_city"), $where);
+
+		if (count($dt) == 0)
+			$r = setError(205);
+		elseif ($dt[0]["id_city"] == "")
+			$r = setError(150);
+		else
+		{	
+			$city = new dataTable("city");
+			$where = where($where, "id", "=", $dt[0]["id_city"]);
+			
+			$res = $city->getFields(array("*"), $where)
+			
+			$r["status"] = "ok";
+			$r["result"] = $res;
+		}
+		
+		echo json_encode($r);
+	}
 	
 ?>

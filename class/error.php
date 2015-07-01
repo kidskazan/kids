@@ -15,12 +15,13 @@
 		207 => "id of the mentor does not exist or is empty", //данного id наставника не существует или пустой
 		208 => "the custom is already authorized", //данный таможенник уже авторизован
 		209 => "id of the custom does not exist or is empty", //данного id таможенника не существует или пустой
+		210 => "Users of this type does not exist", //данного типа пользователя не существует
 		301 => "no qr code", //отсутствует qr code
 		302 => "a child with this qr code does not exist", //ребенка с данным qr кодом не существует
 		303 => "insufficient funds", //недостаточно средств у ребенка для входа на станцию
 		304 => "no child(id)", //данного ребенка не существует по id
 		305 => "the child already at the station", //ребенок уже на станции
-		305 => "the child is not in the city", //данного ребенка нет в городе
+		307 => "the child is not in the city", //данного ребенка нет в городе
 		306 => "bug database (more than one records of the child in the city)", //ошибка базы (больше одной записи о ребенке в городе)
 		401 => "missing or empty reg_id", //отсутствует reg_id или пустой
 		402 => "Let one of the parameters"//пуст один из параметров
